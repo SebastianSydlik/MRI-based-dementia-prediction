@@ -1,18 +1,18 @@
 MRI based dementia prediction
 
-This repository uses the kaggle dataset "MRI and Alzheimer" from https://www.kaggle.com/datasets/jboysen/mri-and-alzheimers/data. This is my capstone project of the MachineLearningOperations course "MLOps Zoomcamp" from DataTalksClubs (https://github.com/DataTalksClub/mlops-zoomcamp).
+This repository uses the kaggle dataset "MRI and Alzheimer" from https://www.kaggle.com/datasets/jboysen/mri-and-alzheimers/data. This is my capstone project of the MachineLearningOperations course "MLOps Zoomcamp" from DataTalksClubs (https://github.com/DataTalksClub/mlops-zoomcamp).  
 
-Early diagnosis of dementia, of which Alzheimer is one specific form, is crucial as irreversible damage already occurs before the onset of symptoms. The data used in this repository are collected with Magnet Resonance Imaging (MRI), which allows imaging inner body structures, such as the brain. The measured parameters are then correlated with clinical tests for dementia for demented and non-demented individuals. 
+Early diagnosis of dementia, of which Alzheimer is one specific form, is crucial as irreversible damage already occurs before the onset of symptoms. The data used in this repository are collected with Magnet Resonance Imaging (MRI), which allows imaging inner body structures, such as the brain. The measured parameters are then correlated with clinical tests for dementia for demented and non-demented individuals.  
 
-Based on this data I use machine learning to be able to predict the probability of dementia based solely on MRI scans, to predict individuals with high-risk of dementia before the onset of symptoms and hence a potential treatment in an early phase of the disease. I thus use the brain parameters measured with MRI to classify patients as demented and non-demented. In practice, the demented patients would then retrieve treatment as early as possible to prevent a further spread of the dementia.
+Based on this data I use machine learning to be able to predict the probability of dementia based solely on MRI scans, to predict individuals with high-risk of dementia before the onset of symptoms and hence a potential treatment in an early phase of the disease. I thus use the brain parameters measured with MRI to classify patients as demented and non-demented. In practice, the demented patients would then retrieve treatment as early as possible to prevent a further spread of the dementia.  
 
-There are two datasets available: One dataset in which each patient was scanned once (cross sectional dataset), and another independent dataset in which each patient was scanned multiple times over several years (longitudinal dataset). There were two possible ways of dealing with the dataset: either merging them, but unsing only the first scan of each patient in the longitudinal dataset (as otherwise the measurements wouldn't be independent any more), or focusing on the longitudinal datasets to see if one can predict onset of dementia at a later stage. Predicting onset of dementia based on the longitudinal dataset performed very poorly on initial trials, hence I merged both datasets and discarded additional measurements of the same patient. 
+There are two datasets available: One dataset in which each patient was scanned once (cross sectional dataset), and another independent dataset in which each patient was scanned multiple times over several years (longitudinal dataset). There were two possible ways of dealing with the dataset: either merging them, but unsing only the first scan of each patient in the longitudinal dataset (as otherwise the measurements wouldn't be independent any more), or focusing on the longitudinal datasets to see if one can predict onset of dementia at a later stage. Predicting onset of dementia based on the longitudinal dataset performed very poorly on initial trials, hence I merged both datasets and discarded additional measurements of the same patient.  
 
-The combined dataset contains 15 columns [
-'id': patient id,
-'m/f':gender,
-'hand': preferred hand,
-'age': age in years,
+The combined dataset contains 15 columns [  
+'id': patient id,  
+'m/f':gender,  
+'hand': preferred hand,  
+'age': age in years,  
 'educ': education level on a scale from 1 (minimal) to 5,
 'ses': socioeconomic status on a scale from 1 to 5,
 'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,

@@ -1,4 +1,4 @@
-#MRI based dementia prediction
+MRI based dementia prediction
 
 This repository uses the kaggle dataset "MRI and Alzheimer" from https://www.kaggle.com/datasets/jboysen/mri-and-alzheimers/data. This is my capstone project of the MachineLearningOperations course "MLOps Zoomcamp" from DataTalksClubs (https://github.com/DataTalksClub/mlops-zoomcamp).
 

@@ -15,8 +15,8 @@ The combined dataset contains 15 columns [
 'age': age in years,  
 'educ': education level on a scale from 1 (minimal) to 5,  
 'ses': socioeconomic status on a scale from 1 to 5,  
-'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,  
-'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5,  
+'mmse': mental state exam - measurement of cognitive performance on a scale from 30 to 0 - scores <=26 mean dementia,  
+'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia,  
 'etiv': estimated volume of the skull,  
 'nwbv': normalized volume of the brain,  
 'asf': atlas scaling factor used for brain volume normalization,  
@@ -39,5 +39,5 @@ The potentially relevant columns for the outlined purpose are thus:
 'asf': atlas scaling factor used for brain volume normalization.   
 
 The target variable can be either/a combination of:  
-'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,  
-'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5.  
+'mmse': mental state exam - measurement of cognitive performance on a scale from 30 to 0 - scores <=26 mean dementia,  
+'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia,  

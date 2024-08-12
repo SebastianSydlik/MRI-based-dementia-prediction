@@ -13,31 +13,31 @@ The combined dataset contains 15 columns [
 'm/f':gender,  
 'hand': preferred hand,  
 'age': age in years,  
-'educ': education level on a scale from 1 (minimal) to 5,
-'ses': socioeconomic status on a scale from 1 to 5,
-'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,
-'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5,
-'etiv': estimated volume of the skull,
-'nwbv': normalized volume of the brain,
-'asf': atlas scaling factor used for brain volume normalization,
-'delay': time elapsed in between visits (only longitudinal dataset),
-'mri_id': scan id (only longitudinal dataset),
-'group': classification as demented or not prior to MRI scan (only longitudinal dataset),
-'visit': number of visit (only longitudinal dataset].
+'educ': education level on a scale from 1 (minimal) to 5,  
+'ses': socioeconomic status on a scale from 1 to 5,  
+'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,  
+'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5,  
+'etiv': estimated volume of the skull,  
+'nwbv': normalized volume of the brain,  
+'asf': atlas scaling factor used for brain volume normalization,  
+'delay': time elapsed in between visits (only longitudinal dataset),  
+'mri_id': scan id (only longitudinal dataset),  
+'group': classification as demented or not prior to MRI scan (only longitudinal dataset),  
+'visit': number of visit (only longitudinal dataset].  
 
-Notably, only two of these parameters are relevant readouts from the scans and hence 'hard' predictors for dementia: etiv and nwbv. The factors gender, age, hand, educ and ses can be seen as 'soft' predictors, which in combination with the MRI scans can predict dementia. mmse and cdr are both readouts of cognitive performance (which are independent of the MRI scan) and could thus be used as target variable to define patients as demented/non-demented. No matter which of these is chosen, it is crucial to remove the other one from the training dataset. 
+Notably, only two of these parameters are relevant readouts from the scans and hence 'hard' predictors for dementia: etiv and nwbv. The factors gender, age, hand, educ and ses can be seen as 'soft' predictors, which in combination with the MRI scans can predict dementia. mmse and cdr are both readouts of cognitive performance (which are independent of the MRI scan) and could thus be used as target variable to define patients as demented/non-demented. No matter which of these is chosen, it is crucial to remove the other one from the training dataset.   
 
-The potentially relevant columns for the outlined purpose are thus:
+The potentially relevant columns for the outlined purpose are thus:  
 
-'m/f':gender,
-'hand': preferred hand,
-'age': age in years,
-'educ': education level on a scale from 1 (minimal) to 5,
-'ses': socioeconomic status on a scale from 1 to 5,
-'etiv': estimated volume of the skull,
-'nwbv': normalized volume of the brain,
-'asf': atlas scaling factor used for brain volume normalization. 
+'m/f':gender,  
+'hand': preferred hand,  
+'age': age in years,  
+'educ': education level on a scale from 1 (minimal) to 5,  
+'ses': socioeconomic status on a scale from 1 to 5,  
+'etiv': estimated volume of the skull,  
+'nwbv': normalized volume of the brain,  
+'asf': atlas scaling factor used for brain volume normalization.   
 
-The target variable can be either/a combination of:
-'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,
-'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5.
+The target variable can be either/a combination of:  
+'mmse': mental state exam - measurement of cognitive performance on a scale from 1 to 30,  
+'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 2 in steps of 0.5.  

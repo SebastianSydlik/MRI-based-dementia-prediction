@@ -25,7 +25,7 @@ The combined dataset contains 15 columns [
 'group': classification as demented or not prior to MRI scan (only longitudinal dataset),  
 'visit': number of visit (only longitudinal dataset].  
 
-Notably, only two of these parameters are relevant readouts from the scans and hence 'hard' predictors for dementia: etiv and nwbv. The factors gender, age, hand, educ and ses can be seen as 'soft' predictors, which in combination with the MRI scans can predict dementia. mmse and cdr are both readouts of cognitive performance (which are independent of the MRI scan) and could thus be used as target variable to define patients as demented/non-demented. No matter which of these is chosen, it is crucial to remove the other one from the training dataset.   
+Notably, only two of these parameters are relevant readouts from the scans and hence 'hard' predictors for dementia: etiv and nwbv. The factors gender, age, educ and ses can be seen as 'soft' predictors, which in combination with the MRI scans can predict dementia. hand (identic across all patients) and id have no informative value. mmse and cdr are both readouts of cognitive performance (which are independent of the MRI scan) and could thus be used as target variable to define patients as demented/non-demented. No matter which of these is chosen, it is crucial to remove the other one from the training dataset.   
 
 The potentially relevant columns for the outlined purpose are thus:  
 

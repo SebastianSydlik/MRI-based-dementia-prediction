@@ -38,6 +38,8 @@ The potentially relevant columns for the outlined purpose are thus:
 'nwbv': normalized volume of the brain,  
 'asf': atlas scaling factor used for brain volume normalization.   
 
-The target variable can be either/a combination of:  
+The target variable used is the ratio of:  
 'mmse': mental state exam - measurement of cognitive performance on a scale from 30 to 0 - scores <=26 mean dementia,  
-'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia,  
+'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia. 
+As a mmse score <=26 means dementia and a cdr score >=1 means dementia, a ratio of cdr/mmse >= 1/26 would mean dementia, which I use as threshold for binary classification. 
+

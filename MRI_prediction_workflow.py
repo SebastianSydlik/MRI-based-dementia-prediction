@@ -4,6 +4,7 @@ import os
 import mlflow
 
 from prefect import flow, task
+from prefect.tasks import task_input_hash
 from hyperopt import STATUS_OK, Trials, fmin, hp, tpe
 from hyperopt.pyll import scope
 from sklearn.model_selection import train_test_split
@@ -11,25 +12,62 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_score
 from xgboost import XGBRegressor
+from datetime import timedelta
 
-@task
-def get_full_path(filename: str):
+@task(retries=3, retry_delay_seconds=10, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+def get_full_path(filename: str) -> str:
+    """
+    Get the full path of the file based on the current working directory.
+    
+    Args:
+        filename (str): Name of the file.
+    
+    Returns:
+        str: Full path to the file.
+    """
     cwd = os.getcwd()
     return cwd + filename
 
-@task
-def load_data(full_path: str):
-    """Load data into df"""
+@task(retries=3, retry_delay_seconds=10, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+def load_data(full_path: str) -> pd.DataFrame:
+    """
+    Load data from a CSV file into a Pandas DataFrame.
+    
+    Args:
+        full_path (str): Full path to the CSV file.
+    
+    Returns:
+        pd.DataFrame: Loaded data.
+    """
     df = pd.read_csv(full_path, sep=",", engine="python", on_bad_lines="skip")
     return df
 
-@task
-def clean_col_names(df):
+@task(retries=3, retry_delay_seconds=10)
+def clean_col_names(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean the column names of the DataFrame by replacing spaces with underscores and converting to lowercase.
+    
+    Args:
+        df (pd.DataFrame): DataFrame with original column names.
+    
+    Returns:
+        pd.DataFrame: DataFrame with cleaned column names.
+    """
     df.columns = df.columns.str.replace(' ', '_').str.lower()
     return df
 
-@task
-def merge_data(df_cross, df_long):
+@task(retries=3, retry_delay_seconds=10)
+def merge_data(df_cross: pd.DataFrame, df_long: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge cross-sectional and longitudinal data into a single DataFrame.
+    
+    Args:
+        df_cross (pd.DataFrame): Cross-sectional data.
+        df_long (pd.DataFrame): Longitudinal data.
+    
+    Returns:
+        pd.DataFrame: Merged DataFrame.
+    """
     new_column_names = {
         'subject_id': 'id',
         'mr_delay': 'delay'
@@ -46,9 +84,17 @@ def merge_data(df_cross, df_long):
                                          'nwbv', 'asf', 'delay'], how='outer')
     return df
 
-@task
-def clean_df(df):
-    """drop cols and rows without information"""
+@task(retries=3, retry_delay_seconds=10)
+def clean_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean the DataFrame by dropping unnecessary columns and rows with missing information.
+    
+    Args:
+        df (pd.DataFrame): Original DataFrame.
+    
+    Returns:
+        pd.DataFrame: Cleaned DataFrame.
+    """
     df_clean = df[df['visit'].isna() | (df['visit'] == 1)]
     df_clean = df_clean.drop(columns=['hand', 'delay', 'id', 'mri_id', 'group', 'visit', 'asf'])
     df_clean = df_clean.dropna(subset=['cdr'])
@@ -58,15 +104,34 @@ def clean_df(df):
     df_clean = df_clean.reset_index(drop=True)
     return df_clean
 
-@task
-def create_binary_fusion_target(df):
+@task(retries=3, retry_delay_seconds=10)
+def create_binary_fusion_target(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Create a binary target for dementia prediction based on CDR and MMSE scores.
+    
+    Args:
+        df (pd.DataFrame): DataFrame with CDR and MMSE scores.
+    
+    Returns:
+        pd.DataFrame: DataFrame with binary target.
+    """
     df['target'] = np.log1p((df['cdr'] + 0.5) / df['mmse'])
     dementia_threshold = np.log1p(1.5 / 26)
     df['target'] = (df['target'] > dementia_threshold).astype(int)
     return df
 
-@task
-def split_data(df, seed):
+@task(retries=3, retry_delay_seconds=10)
+def split_data(df: pd.DataFrame, seed: int):
+    """
+    Split the data into training, validation, and test sets.
+    
+    Args:
+        df (pd.DataFrame): Cleaned DataFrame.
+        seed (int): Random seed for reproducibility.
+    
+    Returns:
+        tuple: X_train, X_val, y_train, y_val DataFrames and Series for training and validation.
+    """
     df_full_train, df_test = train_test_split(df, test_size=0.2, random_state=seed)
     df_train, df_val = train_test_split(df_full_train, test_size=0.25, random_state=seed)
 
@@ -90,8 +155,18 @@ def split_data(df, seed):
 
     return X_train, X_val, y_train, y_val
 
-@task
-def get_scores(y_val, y_pred):
+@task(retries=3, retry_delay_seconds=10)
+def get_scores(y_val, y_pred) -> tuple:
+    """
+    Calculate performance metrics for model evaluation.
+    
+    Args:
+        y_val (pd.Series): True labels for the validation set.
+        y_pred (np.ndarray): Predicted labels for the validation set.
+    
+    Returns:
+        tuple: ROC AUC score, accuracy, precision, recall, and F1 score.
+    """
     roc_auc = roc_auc_score(y_val, y_pred)
     accuracy = sum(y_val == y_pred) / len(y_pred)
     precision = precision_score(y_val, y_pred)
@@ -99,8 +174,23 @@ def get_scores(y_val, y_pred):
     f1 = f1_score(y_val, y_pred)
     return roc_auc, accuracy, precision, recall, f1
 
-@task
+@task(retries=3, retry_delay_seconds=10, timeout_seconds=3600)
 def optimize_model(X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str):
+    """
+    Optimize a machine learning model using Hyperopt.
+    
+    Args:
+        X_train (pd.DataFrame): Training data features.
+        y_train (pd.Series): Training data labels.
+        X_val (pd.DataFrame): Validation data features.
+        y_val (pd.Series): Validation data labels.
+        num_trials (int): Number of trials for optimization.
+        seed (int): Random seed for reproducibility.
+        model_type (str): Type of model to optimize ('random_forest', 'logistic_regression', 'xgboost').
+    
+    Returns:
+        None
+    """
     def objective(params):
         with mlflow.start_run():
             mlflow.log_params(params)
@@ -179,21 +269,33 @@ def main_flow(
         seed=42,
         num_trials=15
 ):
+    """
+    Main flow orchestrating the entire MRI prediction workflow.
+
+    Args:
+        cross_file (str): Path to the cross-sectional data file.
+        long_file (str): Path to the longitudinal data file.
+        seed (int): Random seed for reproducibility.
+        num_trials (int): Number of trials for model optimization.
+
+    Returns:
+        None
+    """
     # mlflow setup
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("random-forest-hyperopt")
 
-    # load
+    # load data
     df_cross = clean_col_names(load_data(get_full_path(cross_file)))
     df_long = clean_col_names(load_data(get_full_path(long_file)))
 
-    # transform
+    # transform data
     df = merge_data(df_cross, df_long)
     df = clean_df(df)
     df = create_binary_fusion_target(df)
     X_train, X_val, y_train, y_val = split_data(df, seed)
 
-    # train
+    # train models
     model_types = ["random_forest", "logistic_regression", "xgboost"]
     for model_type in model_types:
         print(f"Optimizing model: {model_type}")

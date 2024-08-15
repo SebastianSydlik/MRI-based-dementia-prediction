@@ -1,0 +1,2 @@
+mlflow ui --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns #open mlflow port
+prefect cloud login #login to prefect

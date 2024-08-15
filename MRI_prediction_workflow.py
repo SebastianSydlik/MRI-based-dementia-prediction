@@ -175,7 +175,7 @@ def get_scores(y_val, y_pred) -> tuple:
     return roc_auc, accuracy, precision, recall, f1
 
 @task(retries=3, retry_delay_seconds=10, timeout_seconds=3600)
-def optimize_model(X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str):
+def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str):
     """
     Optimize a machine learning model using Hyperopt.
     
@@ -222,6 +222,7 @@ def optimize_model(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
             mlflow.sklearn.log_model(model, artifact_path="artifact")
             mlflow.set_tag("model", model)
             mlflow.end_run()
+
         return {'loss': -f1, 'status': STATUS_OK}
 
     if model_type == "random_forest":
@@ -283,7 +284,7 @@ def main_flow(
     """
     # mlflow setup
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    mlflow.set_experiment("random-forest-hyperopt")
+    mlflow.set_experiment("MRI_model_opt")
 
     # load data
     df_cross = clean_col_names(load_data(get_full_path(cross_file)))
@@ -297,9 +298,10 @@ def main_flow(
 
     # train models
     model_types = ["random_forest", "logistic_regression", "xgboost"]
+
     for model_type in model_types:
         print(f"Optimizing model: {model_type}")
-        optimize_model(X_train, y_train, X_val, y_val, num_trials, seed, model_type)
+        explore_models(X_train, y_train, X_val, y_val, num_trials, seed, model_type)
         print(f"Finished optimizing model: {model_type}\n")
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
-#MRI_prediction_workflow
 import pandas as pd
 import numpy as np
-import os 
+import os
 import mlflow
 
 from prefect import flow, task
@@ -13,58 +12,61 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_score
 from xgboost import XGBRegressor
 
-def get_full_path(filename: str):    
+@task
+def get_full_path(filename: str):
     cwd = os.getcwd()
-    return cwd+filename
+    return cwd + filename
 
-
+@task
 def load_data(full_path: str):
     """Load data into df"""
-    
-    df = pd.read_csv(full_path,sep=",", engine="python", on_bad_lines="skip")     
+    df = pd.read_csv(full_path, sep=",", engine="python", on_bad_lines="skip")
     return df
 
+@task
 def clean_col_names(df):
     df.columns = df.columns.str.replace(' ', '_').str.lower()
     return df
 
+@task
 def merge_data(df_cross, df_long):
-    
     new_column_names = {
-                        'subject_id': 'id',
-                        'mr_delay': 'delay'
-                        }
+        'subject_id': 'id',
+        'mr_delay': 'delay'
+    }
 
     df_long.rename(columns=new_column_names, inplace=True)
 
     new_column_order = ['id', 'm/f', 'hand', 'age', 'educ', 'ses', 'mmse', 'cdr', 'etiv',
-        'nwbv', 'asf', 'delay', 'mri_id', 'group', 'visit']
+                        'nwbv', 'asf', 'delay', 'mri_id', 'group', 'visit']
 
     df_long = df_long[new_column_order]
 
     df = pd.merge(df_cross, df_long, on=['id', 'm/f', 'hand', 'age', 'educ', 'ses', 'mmse', 'cdr', 'etiv',
-        'nwbv', 'asf', 'delay'], how='outer')
+                                         'nwbv', 'asf', 'delay'], how='outer')
     return df
 
+@task
 def clean_df(df):
     """drop cols and rows without information"""
     df_clean = df[df['visit'].isna() | (df['visit'] == 1)]
-    df_clean = df_clean.drop(columns=['hand', 'delay', 'id', 'mri_id','group','visit','asf'])
+    df_clean = df_clean.drop(columns=['hand', 'delay', 'id', 'mri_id', 'group', 'visit', 'asf'])
     df_clean = df_clean.dropna(subset=['cdr'])
     df_clean = df_clean.dropna(subset=['mmse'])
     df_clean['m/f'] = (df_clean['m/f'] == "M").astype(int)
-    df_clean=df_clean.fillna(0)
+    df_clean = df_clean.fillna(0)
     df_clean = df_clean.reset_index(drop=True)
     return df_clean
-    
+
+@task
 def create_binary_fusion_target(df):
-    df['target']=np.log1p((df['cdr']+0.5)/df['mmse'])
-    dementia_threshold = np.log1p(1.5/26)
+    df['target'] = np.log1p((df['cdr'] + 0.5) / df['mmse'])
+    dementia_threshold = np.log1p(1.5 / 26)
     df['target'] = (df['target'] > dementia_threshold).astype(int)
     return df
 
+@task
 def split_data(df, seed):
-    
     df_full_train, df_test = train_test_split(df, test_size=0.2, random_state=seed)
     df_train, df_val = train_test_split(df_full_train, test_size=0.25, random_state=seed)
 
@@ -78,28 +80,27 @@ def split_data(df, seed):
     y_val = df_val.target
     y_test = df_test.target
 
-    df_full_train = df_full_train.drop(columns = ['target','mmse','cdr'])
-    df_train = df_train.drop(columns = ['target','mmse','cdr'])
-    df_val = df_val.drop(columns = ['target','mmse','cdr'])
-    df_test = df_test.drop(columns = ['target','mmse','cdr'])
+    df_full_train = df_full_train.drop(columns=['target', 'mmse', 'cdr'])
+    df_train = df_train.drop(columns=['target', 'mmse', 'cdr'])
+    df_val = df_val.drop(columns=['target', 'mmse', 'cdr'])
+    df_test = df_test.drop(columns=['target', 'mmse', 'cdr'])
 
     X_train = df_train
     X_val = df_val
 
     return X_train, X_val, y_train, y_val
 
-
+@task
 def get_scores(y_val, y_pred):
-    roc_auc = roc_auc_score(y_val,y_pred)
-    accuracy = sum(y_val==y_pred)/len(y_pred)
+    roc_auc = roc_auc_score(y_val, y_pred)
+    accuracy = sum(y_val == y_pred) / len(y_pred)
     precision = precision_score(y_val, y_pred)
     recall = recall_score(y_val, y_pred)
     f1 = f1_score(y_val, y_pred)
     return roc_auc, accuracy, precision, recall, f1
 
-
+@task
 def optimize_model(X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str):
-
     def objective(params):
         with mlflow.start_run():
             mlflow.log_params(params)
@@ -171,35 +172,33 @@ def optimize_model(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
         rstate=rstate
     )
 
+@flow
 def main_flow(
         cross_file: str = '/data/oasis_cross-sectional.csv',
         long_file: str = '/data/oasis_longitudinal.csv',
-        seed = 42,
-        num_trials = 15
+        seed=42,
+        num_trials=15
 ):
-        #mlflow setup
-        mlflow.set_tracking_uri("sqlite:///mlflow.db")
-        mlflow.set_experiment("random-forest-hyperopt")
+    # mlflow setup
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
+    mlflow.set_experiment("random-forest-hyperopt")
 
-        #load
-        df_cross = clean_col_names(load_data(get_full_path(cross_file)))
-        df_long = clean_col_names(load_data(get_full_path(long_file)))
+    # load
+    df_cross = clean_col_names(load_data(get_full_path(cross_file)))
+    df_long = clean_col_names(load_data(get_full_path(long_file)))
 
-        #transform
-        df = merge_data(df_cross, df_long)
-        df = clean_df(df)
-        df = create_binary_fusion_target(df)
-        X_train, X_val, y_train, y_val = split_data(df, seed)
-        
-        #train
-        model_types = ["random_forest", "logistic_regression", "xgboost"]
-        for model_type in model_types:
-            print(f"Optimizing model: {model_type}")
-            optimize_model(X_train, y_train, X_val, y_val, num_trials, seed, model_type)
-            print(f"Finished optimizing model: {model_type}\n")
-        
+    # transform
+    df = merge_data(df_cross, df_long)
+    df = clean_df(df)
+    df = create_binary_fusion_target(df)
+    X_train, X_val, y_train, y_val = split_data(df, seed)
+
+    # train
+    model_types = ["random_forest", "logistic_regression", "xgboost"]
+    for model_type in model_types:
+        print(f"Optimizing model: {model_type}")
+        optimize_model(X_train, y_train, X_val, y_val, num_trials, seed, model_type)
+        print(f"Finished optimizing model: {model_type}\n")
+
 if __name__ == "__main__":
     main_flow()
-
-
-

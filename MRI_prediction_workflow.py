@@ -219,8 +219,10 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
             mlflow.log_metric("precision", precision)
             mlflow.log_metric("recall", recall)
             mlflow.log_metric("f1", f1)
-            mlflow.sklearn.log_model(model, artifact_path="artifact")
+            mlflow.sklearn.log_model(model, artifact_path="models")
             mlflow.set_tag("model", model)
+            artifact_uri = mlflow.get_artifact_uri()
+            mlflow.log_param("artifact_uri", artifact_uri)
             mlflow.end_run()
 
         return {'loss': -f1, 'status': STATUS_OK}
@@ -284,8 +286,8 @@ def main_flow(
     """
     # mlflow setup
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    mlflow.set_experiment("MRI_model_opt")
-
+    mlflow.set_experiment("B")
+    
     # load data
     df_cross = clean_col_names(load_data(get_full_path(cross_file)))
     df_long = clean_col_names(load_data(get_full_path(long_file)))
@@ -297,7 +299,7 @@ def main_flow(
     X_train, X_val, y_train, y_val = split_data(df, seed)
 
     # train models
-    model_types = ["random_forest", "logistic_regression", "xgboost"]
+    model_types = ["random_forest"] #["random_forest", "logistic_regression", "xgboost"]
 
     for model_type in model_types:
         print(f"Optimizing model: {model_type}")

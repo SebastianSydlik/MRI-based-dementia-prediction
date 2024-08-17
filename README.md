@@ -38,6 +38,8 @@ The potentially relevant columns for the outlined purpose are thus:
 'nwbv': normalized volume of the brain,  
 'asf': atlas scaling factor used for brain volume normalization.   
 
+The model is orchestrated with prefect - code blocks are assigned with the @flow and @task decorators and the model is deployed to the prefect cloud.
+
 The target variable used is the ratio of:  
 'mmse': mental state exam - measurement of cognitive performance on a scale from 30 to 0 - scores <=26 mean dementia,  
 'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia. 

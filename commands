@@ -8,3 +8,5 @@ mlflow server \
 
 
 prefect cloud login #login to prefect
+
+gunicorn --bind=0.0.0.0:9696 deployment.predict:app

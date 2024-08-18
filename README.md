@@ -2,10 +2,12 @@ MRI based dementia prediction
 
 This repository uses the kaggle dataset "MRI and Alzheimer" from https://www.kaggle.com/datasets/jboysen/mri-and-alzheimers/data. This is my capstone project of the MachineLearningOperations course "MLOps Zoomcamp" from DataTalksClubs (https://github.com/DataTalksClub/mlops-zoomcamp).  
 
+Background:  
 Early diagnosis of dementia, of which Alzheimer is one specific form, is crucial as irreversible damage already occurs before the onset of symptoms. The data used in this repository are collected with Magnet Resonance Imaging (MRI), which allows imaging inner body structures, such as the brain. The measured parameters are then correlated with clinical tests for dementia for demented and non-demented individuals.  
 
 Based on this data I use machine learning to be able to predict the probability of dementia based solely on MRI scans, to predict individuals with high-risk of dementia before the onset of symptoms and hence a potential treatment in an early phase of the disease. I thus use the brain parameters measured with MRI to classify patients as demented and non-demented. In practice, the demented patients would then retrieve treatment as early as possible to prevent a further spread of the dementia.  
 
+Dataset:  
 There are two datasets available: One dataset in which each patient was scanned once (cross sectional dataset), and another independent dataset in which each patient was scanned multiple times over several years (longitudinal dataset). There were two possible ways of dealing with the dataset: either merging them, but unsing only the first scan of each patient in the longitudinal dataset (as otherwise the measurements wouldn't be independent any more), or focusing on the longitudinal datasets to see if one can predict onset of dementia at a later stage. Predicting onset of dementia based on the longitudinal dataset performed very poorly on initial trials, hence I merged both datasets and discarded additional measurements of the same patient.  
 
 The combined dataset contains 15 columns [  
@@ -45,3 +47,4 @@ The target variable used is the ratio of:
 'cdr': cognitive dementia ranking - measurement of cognitive performance on a scale from 0 to 3 in which a score >=1 means dementia. 
 As a mmse score <=26 means dementia and a cdr score >=1 means dementia, a ratio of cdr/mmse >= 1/26 would mean dementia, which I use as threshold for binary classification. 
 
+ML runs are tracked with mlflow and the workflow is orchestrated using prefect. All data is stored on github codespaces. The model is hosted as a webservice using gunicorn and can be downloaded as docker image. Relevant commands that need to be entered in the terminal for reproducing the code can be found in the commands file. Unit tests can be found in the test folder.

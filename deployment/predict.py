@@ -3,17 +3,14 @@ from pandas import DataFrame
 from numpy import log1p 
 from flask import Flask, request, jsonify
 
-with open('pickle/model.pkl', 'rb') as f_in:
-    model = pickle.load(f_in)
-
-def predict(X):
-    preds = model.predict(X)
-    return preds
-
-def prepare_pd(patient):
+def prepare_df(patient):
     return DataFrame.from_dict([patient])
 
-def pred_binary(pred):
+
+def get_and_apply_model(X):
+    with open('pickle/model.pkl', 'rb') as f_in:
+        model = pickle.load(f_in)
+    pred = model.predict(X)
     dementia_threshold = log1p(1.5 / 26)
     pred = (pred > dementia_threshold).astype(int)
     return pred
@@ -24,9 +21,8 @@ app = Flask('MRI-prediction')
 def predict_endpoint():
     patient = request.get_json()
     
-    X_patient = prepare_pd(patient)
-    pred = predict(X_patient)
-    pred = pred_binary(pred)
+    X_patient = prepare_df(patient)
+    pred = get_and_apply_model(X_patient)
 
     result = {
         'dementia_diagnosis': int(pred[0])

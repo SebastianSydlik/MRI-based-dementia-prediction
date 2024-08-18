@@ -10,6 +10,7 @@ hyperopt = "==0.2.7"
 xgboost = "*"
 gunicorn = "*"
 flask = "*"
+pytest = "*"
 
 [dev-packages]
 

@@ -1,12 +1,13 @@
-mlflow ui --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns #open mlflow port
-
+#Shell commands:
+#Starting mlflow server with correct artifact storage:
 mlflow server \
     --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root ./artifacts \
     --host 0.0.0.0
 
 
-
+#Prefect cloud login:
 prefect cloud login #login to prefect
 
+#Webservice hosting (predict.py being the file name, located in the folder deployment, with the webservice function called app.)
 gunicorn --bind=0.0.0.0:9696 deployment.predict:app

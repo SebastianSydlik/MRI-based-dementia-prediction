@@ -62,6 +62,9 @@ The target variable is the ratio of:
 
 As on the mmse scale a score <=26 indicates dementia and on the cdr scale a score >=1 indicates dementia, a ratio of cdr/mmse >= 1/26 would indicate dementia on a merged scale. I used this as the threshold for binary classification. 
 
+## Model performance metrics
+As the dataset is imbalanced (way more non-demented patients than demented patients), I used the F1 metric as performance indicator.
+
 ## Technical Implementation
 
 - **ML Runs Tracking**: Managed with MLflow.
@@ -71,4 +74,4 @@ As on the mmse scale a score <=26 indicates dementia and on the cdr scale a scor
 
 ## Reproducibility
 
-Relevant commands for reproducing the code can be found in the `commands` file. Unit tests are located in the `test` folder.
+Relevant commands for reproducing the code can be found in the `commands` file. Unit tests are located in the `test` folder. The relevant code for data processing and model training is in the file 'MRI_prediction_workflow.py' in the folder 'model_training'. That folder also contains a jupyter notebook for registering the best performing model in mlflow and for testing the model. 

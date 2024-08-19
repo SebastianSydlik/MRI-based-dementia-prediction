@@ -1,6 +1,6 @@
 import pickle
 from pandas import DataFrame
-from numpy import log1p 
+from numpy import log1p
 from flask import Flask, request, jsonify
 
 def prepare_df(patient):
@@ -20,7 +20,7 @@ app = Flask('MRI-prediction')
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
     patient = request.get_json()
-    
+
     X_patient = prepare_df(patient)
     pred = get_and_apply_model(X_patient)
 

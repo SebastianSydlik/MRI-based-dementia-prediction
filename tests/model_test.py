@@ -1,4 +1,4 @@
-import deployment.predict as predict
+import predict as predict
 import pandas as pd
 
 def test_prepare_df():

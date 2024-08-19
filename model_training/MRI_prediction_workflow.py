@@ -299,7 +299,7 @@ def main_flow(
     X_train, X_val, y_train, y_val = split_data(df, seed)
 
     # train models
-    model_types = ["xgboost"] #["random_forest", "logistic_regression", "xgboost"]
+    model_types = ["random_forest", "logistic_regression", "xgboost"]
 
     for model_type in model_types:
         print(f"Optimizing model: {model_type}")

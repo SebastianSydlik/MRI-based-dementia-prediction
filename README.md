@@ -74,7 +74,7 @@ As the dataset is imbalanced (way more non-demented patients than demented patie
 
 ## Reproducibility
 
-Relevant commands for reproducing the code can be found in the `commands` file. Unit tests are located in the `test` folder. The relevant code for data processing and model training is in the file `MRI_prediction_workflow.py` in the folder `model_training`. That folder also contains a jupyter notebook `MLFlow_model_registry` for registering the best performing model in mlflow and for testing the model. 
+Relevant commands for reproducing the code can be found in the `commands` file. Unit tests are located in the `test` folder. The relevant code for data processing and model training is in the file `MRI_prediction_workflow.py` in the folder `model_training`. That folder also contains a jupyter notebook `MLFlow_model_registry` for registering the best performing model in mlflow and for testing the model. The needed modules can be found in `requirements.txt`.
 
 ## Deployment
 

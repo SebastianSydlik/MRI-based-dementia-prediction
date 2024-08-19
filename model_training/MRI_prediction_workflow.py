@@ -1,8 +1,9 @@
+import os
 import pandas as pd
 import numpy as np
-import os
 import mlflow
 
+from datetime import timedelta
 from prefect import flow, task
 from prefect.tasks import task_input_hash
 from hyperopt import STATUS_OK, Trials, fmin, hp, tpe
@@ -12,9 +13,14 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_score
 from xgboost import XGBRegressor
-from datetime import timedelta
 
-@task(retries=3, retry_delay_seconds=10, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+
+@task(
+    retries=3,
+    retry_delay_seconds=10,
+    cache_key_fn=task_input_hash,
+    cache_expiration=timedelta(days=1),
+)
 def get_full_path(filename: str) -> str:
     """
     Get the full path of the file based on the current working directory.
@@ -28,7 +34,13 @@ def get_full_path(filename: str) -> str:
     cwd = os.getcwd()
     return cwd + filename
 
-@task(retries=3, retry_delay_seconds=10, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+
+@task(
+    retries=3,
+    retry_delay_seconds=10,
+    cache_key_fn=task_input_hash,
+    cache_expiration=timedelta(days=1),
+)
 def load_data(full_path: str) -> pd.DataFrame:
     """
     Load data from a CSV file into a Pandas DataFrame.
@@ -42,10 +54,12 @@ def load_data(full_path: str) -> pd.DataFrame:
     df = pd.read_csv(full_path, sep=",", engine="python", on_bad_lines="skip")
     return df
 
+
 @task(retries=3, retry_delay_seconds=10)
 def clean_col_names(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Clean the column names of the DataFrame by replacing spaces with underscores and converting to lowercase.
+    Clean the column names of the DataFrame by replacing spaces with underscores 
+    and converting to lowercase.
     
     Args:
         df (pd.DataFrame): DataFrame with original column names.
@@ -55,6 +69,7 @@ def clean_col_names(df: pd.DataFrame) -> pd.DataFrame:
     """
     df.columns = df.columns.str.replace(' ', '_').str.lower()
     return df
+
 
 @task(retries=3, retry_delay_seconds=10)
 def merge_data(df_cross: pd.DataFrame, df_long: pd.DataFrame) -> pd.DataFrame:
@@ -70,19 +85,52 @@ def merge_data(df_cross: pd.DataFrame, df_long: pd.DataFrame) -> pd.DataFrame:
     """
     new_column_names = {
         'subject_id': 'id',
-        'mr_delay': 'delay'
+        'mr_delay': 'delay',
     }
 
     df_long.rename(columns=new_column_names, inplace=True)
 
-    new_column_order = ['id', 'm/f', 'hand', 'age', 'educ', 'ses', 'mmse', 'cdr', 'etiv',
-                        'nwbv', 'asf', 'delay', 'mri_id', 'group', 'visit']
+    new_column_order = [
+        'id',
+        'm/f',
+        'hand',
+        'age',
+        'educ',
+        'ses',
+        'mmse',
+        'cdr',
+        'etiv',
+        'nwbv',
+        'asf',
+        'delay',
+        'mri_id',
+        'group',
+        'visit',
+    ]
 
     df_long = df_long[new_column_order]
 
-    df = pd.merge(df_cross, df_long, on=['id', 'm/f', 'hand', 'age', 'educ', 'ses', 'mmse', 'cdr', 'etiv',
-                                         'nwbv', 'asf', 'delay'], how='outer')
+    df = pd.merge(
+        df_cross,
+        df_long,
+        on=[
+            'id',
+            'm/f',
+            'hand',
+            'age',
+            'educ',
+            'ses',
+            'mmse',
+            'cdr',
+            'etiv',
+            'nwbv',
+            'asf',
+            'delay',
+        ],
+        how='outer',
+    )
     return df
+
 
 @task(retries=3, retry_delay_seconds=10)
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -96,13 +144,16 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Cleaned DataFrame.
     """
     df_clean = df[df['visit'].isna() | (df['visit'] == 1)]
-    df_clean = df_clean.drop(columns=['hand', 'delay', 'id', 'mri_id', 'group', 'visit', 'asf'])
+    df_clean = df_clean.drop(
+        columns=['hand', 'delay', 'id', 'mri_id', 'group', 'visit', 'asf']
+    )
     df_clean = df_clean.dropna(subset=['cdr'])
     df_clean = df_clean.dropna(subset=['mmse'])
     df_clean['m/f'] = (df_clean['m/f'] == "M").astype(int)
     df_clean = df_clean.fillna(0)
     df_clean = df_clean.reset_index(drop=True)
     return df_clean
+
 
 @task(retries=3, retry_delay_seconds=10)
 def create_binary_fusion_target(df: pd.DataFrame) -> pd.DataFrame:
@@ -120,6 +171,7 @@ def create_binary_fusion_target(df: pd.DataFrame) -> pd.DataFrame:
     df['target'] = (df['target'] > dementia_threshold).astype(int)
     return df
 
+
 @task(retries=3, retry_delay_seconds=10)
 def split_data(df: pd.DataFrame, seed: int):
     """
@@ -133,7 +185,9 @@ def split_data(df: pd.DataFrame, seed: int):
         tuple: X_train, X_val, y_train, y_val DataFrames and Series for training and validation.
     """
     df_full_train, df_test = train_test_split(df, test_size=0.2, random_state=seed)
-    df_train, df_val = train_test_split(df_full_train, test_size=0.25, random_state=seed)
+    df_train, df_val = train_test_split(
+        df_full_train, test_size=0.25, random_state=seed
+    )
 
     df_full_train = df_full_train.reset_index(drop=True)
     df_train = df_train.reset_index(drop=True)
@@ -155,6 +209,7 @@ def split_data(df: pd.DataFrame, seed: int):
 
     return X_train, X_val, y_train, y_val
 
+
 @task(retries=3, retry_delay_seconds=10)
 def get_scores(y_val, y_pred) -> tuple:
     """
@@ -174,8 +229,11 @@ def get_scores(y_val, y_pred) -> tuple:
     f1 = f1_score(y_val, y_pred)
     return roc_auc, accuracy, precision, recall, f1
 
+
 @task(retries=3, retry_delay_seconds=10, timeout_seconds=3600)
-def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str):
+def explore_models(
+    X_train, y_train, X_val, y_val, num_trials: int, seed, model_type: str
+):
     """
     Optimize a machine learning model using Hyperopt.
     
@@ -186,11 +244,13 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
         y_val (pd.Series): Validation data labels.
         num_trials (int): Number of trials for optimization.
         seed (int): Random seed for reproducibility.
-        model_type (str): Type of model to optimize ('random_forest', 'logistic_regression', 'xgboost').
+        model_type (str): Type of model to optimize ('random_forest', 'logistic_regression', 
+        'xgboost').
     
     Returns:
         None
     """
+
     def objective(params):
         with mlflow.start_run():
             mlflow.log_params(params)
@@ -233,7 +293,7 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
             'n_estimators': scope.int(hp.quniform('n_estimators', 10, 50, 1)),
             'min_samples_split': scope.int(hp.quniform('min_samples_split', 2, 10, 1)),
             'min_samples_leaf': scope.int(hp.quniform('min_samples_leaf', 1, 4, 1)),
-            'random_state': seed
+            'random_state': seed,
         }
     elif model_type == "logistic_regression":
         search_space = {
@@ -241,7 +301,7 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
             'solver': hp.choice('solver', ['lbfgs', 'newton-cg', 'liblinear']),
             'max_iter': 1000,
             'class_weight': 'balanced',
-            'random_state': seed
+            'random_state': seed,
         }
     elif model_type == "xgboost":
         search_space = {
@@ -250,7 +310,7 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
             'n_estimators': scope.int(hp.quniform('n_estimators', 100, 1000, 50)),
             'subsample': hp.uniform('subsample', 0.7, 1.0),
             'colsample_bytree': hp.uniform('colsample_bytree', 0.7, 1.0),
-            'random_state': seed
+            'random_state': seed,
         }
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
@@ -262,15 +322,16 @@ def explore_models(X_train, y_train, X_val, y_val, num_trials: int, seed, model_
         algo=tpe.suggest,
         max_evals=num_trials,
         trials=Trials(),
-        rstate=rstate
+        rstate=rstate,
     )
+
 
 @flow
 def main_flow(
-        cross_file: str = '/data/oasis_cross-sectional.csv',
-        long_file: str = '/data/oasis_longitudinal.csv',
-        seed=42,
-        num_trials=15
+    cross_file: str = '/data/oasis_cross-sectional.csv',
+    long_file: str = '/data/oasis_longitudinal.csv',
+    seed=42,
+    num_trials=15,
 ):
     """
     Main flow orchestrating the entire MRI prediction workflow.
@@ -287,7 +348,7 @@ def main_flow(
     # mlflow setup
     mlflow.set_tracking_uri("http://localhost:5000")
     mlflow.set_experiment("C")
-    
+
     # load data
     df_cross = clean_col_names(load_data(get_full_path(cross_file)))
     df_long = clean_col_names(load_data(get_full_path(long_file)))
@@ -305,6 +366,7 @@ def main_flow(
         print(f"Optimizing model: {model_type}")
         explore_models(X_train, y_train, X_val, y_val, num_trials, seed, model_type)
         print(f"Finished optimizing model: {model_type}\n")
+
 
 if __name__ == "__main__":
     main_flow()

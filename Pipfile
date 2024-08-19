@@ -11,6 +11,7 @@ xgboost = "*"
 gunicorn = "*"
 flask = "*"
 pytest = "*"
+prefect = "*"
 
 [dev-packages]
 

@@ -1,4 +1,6 @@
 #Shell commands:
+
+To be able to run the training flow, the mlflow server needs to be running. So first enter to shell:
 #Starting mlflow server with correct artifact storage:
 mlflow server \
     --backend-store-uri sqlite:///mlflow.db \
@@ -6,8 +8,14 @@ mlflow server \
     --host 0.0.0.0
 
 
-#Prefect cloud login:
-prefect cloud login #login to prefect
-
+To be able to send requests to the server by running test.py, the webserver needs to be started. So enter into shell:
 #Webservice hosting (predict.py being the file name, located in the folder deployment, with the webservice function called app.)
 gunicorn --bind=0.0.0.0:9696 deployment.predict:app
+The webservice can then be called by running: python ./deployment/test.py 
+
+To build a docker image use:
+docker build -t mri-prediction-service:v1 .
+
+To run the docker image use:
+docker run -it --rm -p 9696:9696 mri-prediction-service:v1
+The webservice can then be called by running: python ./deployment/test.py 
